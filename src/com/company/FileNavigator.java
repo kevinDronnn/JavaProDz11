@@ -1,62 +1,52 @@
 package com.company;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 public class FileNavigator {
 
-    private HashMap<String, FileData> list;
+    private HashMap<String, List<FileData>> list;
 
-    public FileNavigator(HashMap<String, FileData> list) {
+    public FileNavigator(HashMap<String, List<FileData>> list) {
         this.list = list;
     }
 
-    public void addFile(HashMap<String, FileData> list , File file) throws IOException {
-        if(!file.createNewFile()){
-            FileData fileData = new FileData(file.getName() , (byte) file.length() , file.getPath());
-            list.put(file.getPath() , fileData);
+    public void addFile(FileData fileData, String path) throws IOException {
+        if (!fileData.getFilePath().equals(path)) {
+            System.out.println("Wrong path");
         }
+        list.putIfAbsent(path, new ArrayList<>());
+        list.get(path).add(fileData);
     }
 
-    public List<FileData> find(String path, HashMap<String, FileData> list) {
+    public List<FileData> find(String path) {
+        List<FileData> list2 = new ArrayList<>();
+        return list.getOrDefault(path, list2);
+    }
 
+    public List<FileData> filterBySize(byte size) {
 
-        List<FileData> fileData = new ArrayList<>();
-        for (Map.Entry<String, FileData> entry : list.entrySet()) {
-            if (entry.getKey().equals(path)) {
-                fileData.add(entry.getValue());
+        List<FileData> resultList = new ArrayList<>();
+        for (List<FileData> fileList : list.values()) {
+            for (FileData file : fileList) {
+                if (file.getFileSize() <= size) {
+                    resultList.add(file);
+                }
             }
         }
-        return fileData;
+        return resultList;
     }
 
-    public List<FileData> filterBySize(byte size, HashMap<String,FileData> list) {
-        List<FileData> fileData = new ArrayList<>();
-        for (Map.Entry<String, FileData> entry : list.entrySet()) {
-            if (entry.getValue().getFileSize() <= size) {
-                fileData.add(entry.getValue());
-            }
+    public void remove(String path) {
+        list.remove(path);
+    }
+
+    public List<FileData> sortBySize() {
+        List<FileData> sortedList = new ArrayList<>();
+        for (List<FileData> fileList : list.values()) {
+            sortedList.addAll(fileList);
         }
-        return fileData;
+        sortedList.sort(Comparator.comparing(num -> num.getFileSize()));
+        return sortedList;
     }
-
-    public void remove(String path, HashMap<String, FileData> list) {
-        File file = new File(path);
-        for (Map.Entry<String, FileData> entry : list.entrySet()) {
-            if (entry.getKey().equals(path)) {
-                list.remove(path);
-                file.delete();
-            }
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "FileNavigator{" +
-                "list=" + list +
-                '}';
-    }
-
-
 }
